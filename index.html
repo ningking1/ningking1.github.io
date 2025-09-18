@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络安全知识答题</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        danger: '#F53F3F',
+                        success: '#00B42A',
+                        dark: '#1D2129',
+                        light: '#F2F3F5'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 10px 30px -5px rgba(22, 93, 255, 0.1);
+            }
+            .option-hover {
+                transition: all 0.3s ease;
+            }
+            .option-hover:hover {
+                transform: translateY(-2px);
+            }
+            .progress-animation {
+                transition: width 0.5s ease-in-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-dark">
+    <!-- 顶部导航 -->
+    <header class="bg-primary text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-shield text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold">网络安全知识答题</h1>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <div class="flex items-center">
+                    <i class="fa fa-users mr-2 text-blue-200"></i>
+                    <span id="participant-count" class="font-semibold">参与人数: 0</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fa fa-trophy mr-2 text-yellow-300"></i>
+                    <span id="score-display" class="font-semibold">得分: 0</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fa fa-clock-o mr-2"></i>
+                    <span id="timer-display">00:00</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 移动端信息栏 -->
+        <div class="md:hidden flex flex-wrap justify-between bg-white rounded-lg p-3 shadow mb-6 gap-2">
+            <div class="flex items-center">
+                <i class="fa fa-users mr-2 text-primary"></i>
+                <span id="mobile-participants" class="font-semibold">参与: 0</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fa fa-trophy mr-2 text-yellow-500"></i>
+                <span id="mobile-score" class="font-semibold">得分: 0</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fa fa-clock-o mr-2 text-primary"></i>
+                <span id="mobile-timer">00:00</span>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="mb-8 bg-white rounded-lg p-4 shadow">
+            <div class="flex justify-between mb-2">
+                <span class="text-sm font-medium text-gray-600">答题进度</span>
+                <span id="progress-text" class="text-sm font-medium text-primary">1/10</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-primary progress-animation rounded-full" style="width: 10%"></div>
+            </div>
+        </div>
+
+        <!-- 开始界面 -->
+        <div id="start-screen" class="bg-white rounded-xl p-8 text-center card-shadow transition-all duration-500 transform">
+            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa fa-graduation-cap text-4xl text-primary"></i>
+            </div>
+            <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-4">网络安全知识挑战</h2>
+            <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+                测试你的网络安全知识水平！本测验包含10道题目，涵盖密码安全、网络攻击、数据保护等方面。
+                完成所有题目后将显示你的得分和正确答案解析。
+            </p>
+            <p class="text-gray-500 text-sm mb-8">
+                <i class="fa fa-users mr-1"></i> 已有 <span id="start-participant-count" class="text-primary font-semibold">0</span> 人参与答题
+            </p>
+            <button id="start-btn" class="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                开始答题
+            </button>
+        </div>
+
+        <!-- 答题界面 -->
+        <div id="quiz-screen" class="hidden bg-white rounded-xl p-6 md:p-8 card-shadow">
+            <div class="mb-6">
+                <h2 id="question-number" class="text-lg font-semibold text-primary mb-2">问题 1</h2>
+                <h3 id="question-text" class="text-xl md:text-2xl font-bold mb-6">什么是最安全的密码管理方式？</h3>
+            </div>
+
+            <div id="options-container" class="space-y-3 mb-8">
+                <!-- 选项将通过JS动态生成 -->
+            </div>
+
+            <div class="flex justify-between">
+                <button id="prev-btn" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg transition-all">
+                    <i class="fa fa-arrow-left mr-2"></i>上一题
+                </button>
+                <div class="ml-auto">
+                    <button id="next-btn" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg transition-all">
+                        下一题<i class="fa fa-arrow-right ml-2"></i>
+                    </button>
+                    <button id="submit-btn" class="hidden bg-success hover:bg-success/90 text-white font-medium py-2 px-6 rounded-lg transition-all">
+                        提交答案<i class="fa fa-check ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 答案反馈界面 -->
+        <div id="feedback-screen" class="hidden bg-white rounded-xl p-6 md:p-8 card-shadow">
+            <div id="correct-feedback" class="hidden">
+                <div class="flex items-center justify-center w-16 h-16 bg-success/20 rounded-full mx-auto mb-6">
+                    <i class="fa fa-check text-3xl text-success"></i>
+                </div>
+                <h3 class="text-xl font-bold text-center text-success mb-4">回答正确！</h3>
+            </div>
+
+            <div id="incorrect-feedback" class="hidden">
+                <div class="flex items-center justify-center w-16 h-16 bg-danger/20 rounded-full mx-auto mb-6">
+                    <i class="fa fa-times text-3xl text-danger"></i>
+                </div>
+                <h3 class="text-xl font-bold text-center text-danger mb-4">回答错误</h3>
+                <div class="bg-light rounded-lg p-4 mb-6">
+                    <p class="font-medium mb-2">正确答案是：</p>
+                    <p id="correct-answer" class="text-primary"></p>
+                </div>
+            </div>
+
+            <div class="bg-light rounded-lg p-4 mb-6">
+                <p class="font-medium mb-2">解析：</p>
+                <p id="explanation" class="text-gray-700"></p>
+            </div>
+
+            <div class="text-center">
+                <button id="continue-btn" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg transition-all">
+                    继续<i class="fa fa-arrow-right ml-2"></i>
+                </button>
+                <button id="finish-btn" class="hidden bg-success hover:bg-success/90 text-white font-medium py-2 px-6 rounded-lg transition-all">
+                    查看结果<i class="fa fa-trophy ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="results-screen" class="hidden bg-white rounded-xl p-6 md:p-8 card-shadow text-center">
+            <div class="mb-8">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-primary/10 rounded-full mb-4">
+                    <i class="fa fa-certificate text-5xl text-primary"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">答题完成！</h2>
+                <p class="text-gray-600">恭喜你完成了所有网络安全知识题目</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div class="bg-light rounded-lg p-4">
+                    <p class="text-gray-600 text-sm mb-1">总题目</p>
+                    <p id="total-questions" class="text-2xl font-bold">10</p>
+                </div>
+                <div class="bg-light rounded-lg p-4">
+                    <p class="text-gray-600 text-sm mb-1">正确</p>
+                    <p id="correct-count" class="text-2xl font-bold text-success">0</p>
+                </div>
+                <div class="bg-light rounded-lg p-4">
+                    <p class="text-gray-600 text-sm mb-1">错误</p>
+                    <p id="incorrect-count" class="text-2xl font-bold text-danger">0</p>
+                </div>
+                <div class="bg-light rounded-lg p-4">
+                    <p class="text-gray-600 text-sm mb-1">得分</p>
+                    <p id="final-score" class="text-2xl font-bold text-primary">0</p>
+                </div>
+                <div class="bg-light rounded-lg p-4">
+                    <p class="text-gray-600 text-sm mb-1">参与人数</p>
+                    <p id="result-participant-count" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <div class="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary font-medium mb-4">
+                    <span id="result-rank">网络安全新手</span>
+                </div>
+                <p id="result-message" class="text-gray-600 max-w-md mx-auto">
+                    继续学习网络安全知识，提升你的安全意识和技能！
+                </p>
+            </div>
+
+            <button id="restart-btn" class="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                重新答题
+            </button>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">网络安全知识答题 &copy; 2023</p>
+            <p class="text-sm text-gray-400">提升网络安全意识，共建安全网络环境</p>
+        </div>
+    </footer>
+
+    <script>
+        // 题库数据
+        const quizQuestions = [
+            {
+                question: "什么是最安全的密码管理方式？",
+                options: [
+                    "使用相同的密码但包含大小写字母",
+                    "为每个账户创建独特的强密码并使用密码管理器",
+                    "使用生日或姓名作为密码以便记忆",
+                    "定期在所有账户上使用相同的新密码"
+                ],
+                correctAnswer: 1,
+                explanation: "使用独特的强密码（包含大小写字母、数字和特殊字符）并配合密码管理器是最安全的方式。重复使用密码会导致一个账户被攻破后其他账户也面临风险。"
+            },
+            {
+                question: "以下哪种是常见的网络钓鱼攻击方式？",
+                options: [
+                    "收到看似来自银行的邮件，要求你点击链接并输入账户信息",
+                    "电脑突然变慢并出现大量弹出窗口",
+                    "网站加载速度异常缓慢",
+                    "社交媒体上收到大量陌生好友请求"
+                ],
+                correctAnswer: 0,
+                explanation: "网络钓鱼通常通过伪装成可信实体（如银行、社交媒体平台）发送邮件或消息，诱导用户泄露敏感信息。其他选项可能是其他类型的安全问题，但不是钓鱼攻击。"
+            },
+            {
+                question: "什么是多因素认证（MFA）？",
+                options: [
+                    "一种使用多个密码的认证方式",
+                    "要求两种或更多验证方式的安全机制",
+                    "仅在移动设备上使用的认证方式",
+                    "用于保护多重网络的安全协议"
+                ],
+                correctAnswer: 1,
+                explanation: "多因素认证要求用户提供两种或更多的验证方式，通常包括：你知道的东西（密码）、你拥有的东西（如手机验证码）和你本身的特征（生物识别）。这大大提高了账户安全性。"
+            },
+            {
+                question: "以下哪种行为最可能导致计算机感染恶意软件？",
+                options: [
+                    "定期更新操作系统和应用程序",
+                    "打开来自未知发件人的电子邮件附件",
+                    "使用强密码并定期更换",
+                    "启用防火墙和杀毒软件"
+                ],
+                correctAnswer: 1,
+                explanation: "未知发件人的电子邮件附件常常是恶意软件的传播途径。其他选项都是良好的安全实践，有助于保护计算机免受恶意软件侵害。"
+            },
+            {
+                question: "HTTPS协议相比HTTP的主要优势是什么？",
+                options: [
+                    "加载网页速度更快",
+                    "提供数据传输加密，增强安全性",
+                    "支持更多的网页功能",
+                    "可以访问更多受限网站"
+                ],
+                correctAnswer: 1,
+                explanation: "HTTPS（超文本传输安全协议）通过SSL/TLS加密在客户端和服务器之间传输的数据，防止数据在传输过程中被窃听或篡改。这是保护敏感信息（如登录凭证、支付信息）的关键。"
+            },
+            {
+                question: "什么是SQL注入攻击？",
+                options: [
+                    "一种物理攻击计算机硬件的方式",
+                    "通过输入恶意SQL代码来操纵数据库的攻击",
+                    "专门针对移动设备的病毒攻击",
+                    "用于破解无线网络密码的技术"
+                ],
+                correctAnswer: 1,
+                explanation: "SQL注入是一种常见的Web安全漏洞，攻击者通过在输入字段中插入恶意SQL代码，操纵后端数据库，可能导致未授权的数据访问、数据篡改甚至删除数据库。"
+            },
+            {
+                question: "在公共Wi-Fi网络上，以下哪种行为最不安全？",
+                options: [
+                    "浏览新闻网站",
+                    "使用HTTPS加密的网站进行网上银行操作",
+                    "登录社交媒体账户",
+                    "进行在线购物并输入信用卡信息"
+                ],
+                correctAnswer: 3,
+                explanation: "公共Wi-Fi网络通常安全性较低，容易被黑客监听。虽然HTTPS提供了一定保护，但在公共网络上进行涉及敏感财务信息的操作仍然风险较高，应尽量避免。"
+            },
+            {
+                question: "什么是勒索软件？",
+                options: [
+                    "一种监控用户在线活动的软件",
+                    "加密用户文件并要求支付赎金才能解密的恶意软件",
+                    "用于提高计算机性能的优化软件",
+                    "一种窃取社交媒体账号的工具"
+                ],
+                correctAnswer: 1,
+                explanation: "勒索软件是一种恶意软件，它会加密受害者的文件或整个系统，然后要求支付赎金（通常是加密货币）以换取解密密钥。定期备份数据是防范勒索软件的有效措施。"
+            },
+            {
+                question: "以下哪项不是良好的安全习惯？",
+                options: [
+                    "定期备份重要数据",
+                    "忽略软件更新提醒",
+                    "不随意点击可疑链接",
+                    "使用防火墙保护网络"
+                ],
+                correctAnswer: 1,
+                explanation: "软件更新通常包含安全补丁，修复已知的漏洞。忽略更新会使系统和应用程序暴露在已知的安全风险中。其他选项都是应养成的良好安全习惯。"
+            },
+            {
+                question: "什么是社会工程学攻击？",
+                options: [
+                    "利用计算机代码漏洞进行的攻击",
+                    "通过操纵人的心理而非技术手段获取信息的攻击",
+                    "针对社会媒体平台的专用攻击",
+                    "一种分布式拒绝服务攻击"
+                ],
+                correctAnswer: 1,
+                explanation: "社会工程学攻击利用人类的信任、好奇心或恐惧等心理特征，诱导人们泄露敏感信息或执行不安全的操作。这类攻击不依赖技术漏洞，而是针对人的弱点。"
+            }
+        ];
+
+        // 全局变量
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let startTime = null;
+        let timerInterval = null;
+        let userAnswers = new Array(quizQuestions.length).fill(null);
+        let participantCount = 0;
+
+        // DOM 元素
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const feedbackScreen = document.getElementById('feedback-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startBtn = document.getElementById('start-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const questionNumber = document.getElementById('question-number');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const scoreDisplay = document.getElementById('score-display');
+        const mobileScore = document.getElementById('mobile-score');
+        const timerDisplay = document.getElementById('timer-display');
+        const mobileTimer = document.getElementById('mobile-timer');
+        const correctFeedback = document.getElementById('correct-feedback');
+        const incorrectFeedback = document.getElementById('incorrect-feedback');
+        const correctAnswerText = document.getElementById('correct-answer');
+        const explanationText = document.getElementById('explanation');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const correctCountEl = document.getElementById('correct-count');
+        const incorrectCountEl = document.getElementById('incorrect-count');
+        const finalScoreEl = document.getElementById('final-score');
+        const resultRankEl = document.getElementById('result-rank');
+        const resultMessageEl = document.getElementById('result-message');
+        const participantCountEl = document.getElementById('participant-count');
+        const mobileParticipantsEl = document.getElementById('mobile-participants');
+        const startParticipantCountEl = document.getElementById('start-participant-count');
+        const resultParticipantCountEl = document.getElementById('result-participant-count');
+
+        // 初始化
+        function init() {
+            // 加载参与人数统计
+            loadParticipantCount();
+            
+            // 事件监听
+            startBtn.addEventListener('click', startQuiz);
+            prevBtn.addEventListener('click', goToPreviousQuestion);
+            nextBtn.addEventListener('click', goToNextQuestion);
+            submitBtn.addEventListener('click', submitAnswer);
+            continueBtn.addEventListener('click', continueToNextQuestion);
+            finishBtn.addEventListener('click', showResults);
+            restartBtn.addEventListener('click', restartQuiz);
+        }
+        
+        // 加载参与人数统计
+        function loadParticipantCount() {
+            const count = localStorage.getItem('cyberQuizParticipantCount') || 0;
+            participantCount = parseInt(count);
+            updateParticipantDisplay();
+        }
+        
+        // 更新参与人数显示
+        function updateParticipantDisplay() {
+            participantCountEl.textContent = `参与人数: ${participantCount}`;
+            mobileParticipantsEl.textContent = `参与: ${participantCount}`;
+            startParticipantCountEl.textContent = participantCount;
+            resultParticipantCountEl.textContent = participantCount;
+        }
+        
+        // 增加参与人数
+        function incrementParticipantCount() {
+            participantCount++;
+            localStorage.setItem('cyberQuizParticipantCount', participantCount);
+            updateParticipantDisplay();
+        }
+
+        // 开始答题
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            // 开始计时
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            loadQuestion(currentQuestion);
+        }
+
+        // 加载题目
+        function loadQuestion(index) {
+            const question = quizQuestions[index];
+            questionNumber.textContent = `问题 ${index + 1}`;
+            questionText.textContent = question.question;
+            optionsContainer.innerHTML = '';
+            
+            // 生成选项
+            question.options.forEach((option, i) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = `border rounded-lg p-4 option-hover cursor-pointer ${
+                    userAnswers[index] === i ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary hover:bg-primary/5'
+                }`;
+                optionDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-5 h-5 rounded-full border-2 flex-shrink-0 mr-3 ${
+                            userAnswers[index] === i ? 'border-primary bg-primary' : 'border-gray-300'
+                        }">
+                            ${userAnswers[index] === i ? '<i class="fa fa-check text-white text-xs"></i>' : ''}
+                        </div>
+                        <span>${option}</span>
+                    </div>
+                `;
+                optionDiv.addEventListener('click', () => selectAnswer(i));
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // 更新导航按钮状态
+            updateNavigationButtons();
+            
+            // 更新进度
+            updateProgress();
+        }
+
+        // 选择答案
+        function selectAnswer(index) {
+            selectedAnswer = index;
+            userAnswers[currentQuestion] = index;
+            loadQuestion(currentQuestion); // 重新加载以更新UI
+        }
+
+        // 提交答案
+        function submitAnswer() {
+            if (selectedAnswer === null) return;
+            
+            // 检查答案
+            const isCorrect = selectedAnswer === quizQuestions[currentQuestion].correctAnswer;
+            if (isCorrect) {
+                score += 10; // 每题10分
+                updateScoreDisplay();
+            }
+            
+            // 显示反馈
+            quizScreen.classList.add('hidden');
+            feedbackScreen.classList.remove('hidden');
+            
+            // 更新反馈内容
+            if (isCorrect) {
+                correctFeedback.classList.remove('hidden');
+                incorrectFeedback.classList.add('hidden');
+            } else {
+                correctFeedback.classList.add('hidden');
+                incorrectFeedback.classList.remove('hidden');
+                correctAnswerText.textContent = quizQuestions[currentQuestion].options[quizQuestions[currentQuestion].correctAnswer];
+            }
+            
+            explanationText.textContent = quizQuestions[currentQuestion].explanation;
+            
+            // 显示完成按钮（最后一题）
+            if (currentQuestion === quizQuestions.length - 1) {
+                continueBtn.classList.add('hidden');
+                finishBtn.classList.remove('hidden');
+            } else {
+                continueBtn.classList.remove('hidden');
+                finishBtn.classList.add('hidden');
+            }
+        }
+
+        // 继续到下一题
+        function continueToNextQuestion() {
+            feedbackScreen.classList.add('hidden');
+            currentQuestion++;
+            loadQuestion(currentQuestion);
+            quizScreen.classList.remove('hidden');
+            selectedAnswer = userAnswers[currentQuestion];
+        }
+
+        // 显示结果
+        function showResults() {
+            clearInterval(timerInterval);
+            feedbackScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            // 增加参与人数统计
+            incrementParticipantCount();
+            
+            // 计算结果
+            const correctCount = userAnswers.filter((ans, i) => ans === quizQuestions[i].correctAnswer).length;
+            const incorrectCount = quizQuestions.length - correctCount;
+            
+            // 更新结果显示
+            totalQuestionsEl.textContent = quizQuestions.length;
+            correctCountEl.textContent = correctCount;
+            incorrectCountEl.textContent = incorrectCount;
+            finalScoreEl.textContent = score;
+            
+            // 设置等级和评价
+            let rank, message;
+            if (score === 100) {
+                rank = "网络安全专家";
+                message = "太棒了！你拥有出色的网络安全知识，继续保持这种安全意识！";
+            } else if (score >= 80) {
+                rank = "网络安全达人";
+                message = "非常好！你的网络安全知识相当扎实，只需稍加巩固就能成为专家。";
+            } else if (score >= 60) {
+                rank = "网络安全爱好者";
+                message = "不错！你具备基本的网络安全知识，但还有提升空间。";
+            } else if (score >= 40) {
+                rank = "网络安全新手";
+                message = "你有一些网络安全知识，但需要加强学习以保护自己的在线安全。";
+            } else {
+                rank = "网络安全入门者";
+                message = "建议你多学习网络安全知识，这对保护个人信息和设备安全至关重要。";
+            }
+            
+            resultRankEl.textContent = rank;
+            resultMessageEl.textContent = message;
+        }
+
+        // 重新开始答题
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            userAnswers.fill(null);
+            updateScoreDisplay();
+            
+            resultsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        // 上一题
+        function goToPreviousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                selectedAnswer = userAnswers[currentQuestion];
+                loadQuestion(currentQuestion);
+            }
+        }
+
+        // 下一题
+        function goToNextQuestion() {
+            if (selectedAnswer !== null) {
+                if (currentQuestion < quizQuestions.length - 1) {
+                    currentQuestion++;
+                    selectedAnswer = userAnswers[currentQuestion];
+                    loadQuestion(currentQuestion);
+                }
+            }
+        }
+
+        // 更新导航按钮
+        function updateNavigationButtons() {
+            // 上一题按钮
+            if (currentQuestion === 0) {
+                prevBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+            }
+            
+            // 下一题和提交按钮
+            if (currentQuestion === quizQuestions.length - 1) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${currentQuestion + 1}/${quizQuestions.length}`;
+        }
+
+        // 更新分数显示
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `得分: ${score}`;
+            mobileScore.textContent = `得分: ${score}`;
+        }
+
+        // 更新计时器
+        function updateTimer() {
+            if (!startTime) return;
+            
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now - startTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+            const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+            const timeString = `${minutes}:${seconds}`;
+            
+            timerDisplay.textContent = timeString;
+            mobileTimer.textContent = timeString;
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
